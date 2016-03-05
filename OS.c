@@ -67,6 +67,16 @@ int dealokasiSharedMemory(int kunci){
     return 0;
 }
 
+/*
+	Menangani sinyal SIGUSR1 yang dikirim oleh MMU
+*/
+void  penangananSignal(int sig){
+
+	// tangani sinyal disini...
+    
+    signal(SIGUSR1, penangananSignal);
+}
+
 int main(int argc, char *argv[]){
 
 	if(argc < 2){
@@ -90,6 +100,15 @@ int main(int argc, char *argv[]){
 	printf("$ PROSES BERLANGSUNG! $\n");
 	printf("+-<-<-<-<-<-<-<-<-<-<-+\n");
 	printf("\n");
+	/*
+		Pada bagian ini, Simulator OS (OS.c) bekerja dengan menunggu sinyal SIGUSR1 dari program MMU (MMU.c)
+
+		kode sbb:
+
+			signal(SIGUSR1, penangananSignal);
+		    while (1)
+		        pause();
+	*/
 
 	if(dealokasiSharedMemory(idSharedMemory) == -1){
 		printf("Dealokasi Shared Memory Gagal\n");

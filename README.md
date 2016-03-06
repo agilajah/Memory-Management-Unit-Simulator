@@ -31,7 +31,7 @@ Tugas Besar OS
   [page] : nomor page yang akan diakses<br><br>
   <b> Alur Manajemen Memori </b><br>
   <b>Pre</b><br>
-  Pertama kali dijalankan, MMU menerima masukan berupa alamat memori virtual yang dialokasikan oleh OS Simulator (terdapat pada argumen terakhir MMU.c) yang akan digunakan oleh MMU untuk menciptakan sebuah segmen memori virtual pada RAM agar dapat digunakan (proses attach), lalu menciptakan sebuah pointer ke segmen tersebut.<br>
+  Pertama kali dijalankan, MMU menerima masukan lokasi memori virtual berupa kunci(Shared Memory Key) yang dialokasikan oleh OS Simulator (terdapat pada argumen terakhir MMU.c) yang akan digunakan oleh MMU untuk menciptakan sebuah segmen memori virtual pada RAM agar dapat digunakan (proses attach), lalu menciptakan sebuah pointer ke segmen tersebut.<br>
   Setelah proses tersebut selesai, MMU siap menerima pekerjaan.<br><br>
   <b>Proses</b><br>
   Step MMU mengolah pekerjaan adalah sbb:<br>
@@ -46,5 +46,17 @@ Tugas Besar OS
 <br>
 <p>
   <b>Simulator Sistem Operasi</b><br>
+  <b>Pre</b><br>
+  Sistem Operasi dimulai dengan dua argumen awal, yaitu banyak Page dan banyak Frame. Sistem operasi akan melakukan alokasi memori virtual pada disk sebesar banyak Page (arg) dengan jenis data page_table_entry. Sistem Operasi akan mencetak Shared Memory Key ke layar ketika berhasil melakukan alokasi. Kunci ini akan digunakan oleh MMU untuk mengakses memori virtual yang telah dialokasi.
+  Setelah proses alokasi dan mencetak kunci selesai, Sistem Operasi menunggu sinyal dari MMU untuk mengerjakan tugas yang dibutuhkan oleh MMU.<br><br>
+  <b>Proses</b><br>
+  Step Sistem Operasi mengolah pekerjaan adalah sbb:<br>
+  1. Sistem operasi menerima sinyal SIGUSR1 dari MMU.<br>
+  2. Sistem Operasi mengecek apakah MMU meminta untuk meload sebuah page ke memori.<br>
+  3. Jika MMU meminta request page, Sistem Operasi akan memuat page tersebut ke dalam memori virtual, lalu mengirim sinyal kembali ke MMU menandakan page telah selesai dimuat.<br>
+  4. Jika MMU tidak meminta request page, maka Sistem Operasi berhenti (Selesai).<br>
+  <b>Post</b><br>
+  Sebelum Sistem Operasi berhenti, memori virtual yang dialokasikan pada disk harus didealokasi oleh Sistem Operasi.<br>
+  
 </p>
 <br>

@@ -27,8 +27,9 @@ Tugas Besar OS
   <pre>
     [mode][page]
   </pre>
-  <i>[mode]</i> : jenis aksi dari proses yang akan diproses, baca(R) atau tulis(R)
-  <i>[page]</i> : nomor page yang akan diakses
+  [mode] : jenis aksi dari proses yang akan diproses, baca(R) atau tulis(R) <br>
+  [page] : nomor page yang akan diakses<br>
+  > Alur Manajemen Memori
 </p>
 <br>
 <p>

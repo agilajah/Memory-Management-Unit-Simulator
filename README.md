@@ -15,6 +15,10 @@ Tugas Besar OS
 
   typedef page_table_entry* page_table_pointer;
   </pre>
+  boolean <i>Valid</i> : menyatakan apakah page tersebut ada di memori fisik. 
+  integer <i>Frame</i> : menyatakan indeks frame page tersebut di memori fisik.
+  boolean <i>Dirty</i> : menyatakan apakah page tersebut telah ditulis. 
+  integer <i>Requested<i> : bernilai bukan‐nol hanya jika page tersebut tidak pada memori fisik dan dipesan oleh MMU. Pada kasus tersebut, nilai ini diisi dengan ID proses (PID) dari MMU.
 </p>
 <br>
 <p>

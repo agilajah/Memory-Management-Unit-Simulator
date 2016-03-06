@@ -1,3 +1,4 @@
+//-----------------------------------------------------------------------------
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -11,16 +12,13 @@
 #include <sys/shm.h>
 #include <sys/stat.h>
 #include "PageTable.h"
+//-----------------------------------------------------------------------------
 
-/*
-	R0 R2 R1 W3 R0 R2 R1 W4 R0 R2 R1 W3 R0 R2 R1 W4 R0 R2 R1 W3 R0 R2 R1 W4
-*/
 
-int banyakPage;
-int banyakFrame;
-page_table_pointer dataPage;
-int statusOS = 0;
-int aksesDisk = 0;
+//----Used for delayed tasks
+void ContinueHandler(int Signal) {
+//----Nothing to do
+}
 
 //-----------------------------------------------------------------------------
 void PrintPageTable(page_table_entry PageTable[],int NumberOfPages) {
@@ -31,249 +29,119 @@ void PrintPageTable(page_table_entry PageTable[],int NumberOfPages) {
     }
 }
 
-/*
-	Sinopsis
-		int alokasiSharedMemory(key_t kunci, int ukuran);
 
-	Nilai Kembali
-		Jika alokasi berhasil, dikembalikan id shared memory, jika gagal -1.
-*/
-int alokasiSharedMemory(key_t kunci, int ukuran){
-	// ID Shared Memory yang akan dialokasi
-    int shmid;
+//-----------------------------------------------------------------------------
+int main(int argc, char *argv[]) {
 
-    // Melakukan alokasi Shared Memori jika memungkinkan dan mengubungkannya
-    if ((shmid = shmget(kunci, ukuran, 0644 | IPC_CREAT)) == -1) {
-        perror("shmget");
-        return -1;
+    int SharedMemoryKey;
+    int NumberOfPages;
+    int OSPID;
+    int SegmentID;
+    page_table_pointer PageTable;
+    int RSIndex;
+    int Mode;
+    int Page;
+
+    /*
+        SharedMemoryKey = arg terakhir
+        NumberOfPages = arg pertama
+    */
+    if (argc < 2 || (OSPID = SharedMemoryKey = atoi(argv[argc-1])) == 0  || (NumberOfPages = atoi(argv[1])) == 0) {
+        printf("Usage:");
+        exit(EXIT_FAILURE);
     }
 
-    // Menempatkan (attaching) Shared Memori yang telah dialokasi dan 
-    // dihubungkan diatas pada memori (RAM) dan alamat memori disimpan 
-    // pada variabel dataPage.
-    dataPage = (page_table_pointer) shmat(shmid, NULL, 0);
-    if (dataPage == (page_table_pointer)(-1)) {
-        perror("shmat");
-        return -1;
+    printf("SharedMemoryKey = %d | NumberOfPages = %d\n", SharedMemoryKey, NumberOfPages);
+    //----Create the page table
+    if ((SegmentID = shmget(SharedMemoryKey, NumberOfPages * sizeof(page_table_entry), 0)) == -1
+     || (PageTable = (page_table_pointer) shmat(SegmentID,NULL,0)) == NULL){
+        printf("SegmentID : %d\n", SegmentID);
+        perror("ERROR: Could not get page table");
+        exit(EXIT_FAILURE);
     }
 
-    printf("The shared memory key (PID) is %d\n", kunci);
-
-    // Inisialisasi nilai awal page
-    printf("Initialized page table\n\n");
-    for(int i = 0; i < banyakPage; i++){
-    	dataPage[i].Valid = 0;
-    	dataPage[i].Frame = -1;
-    	dataPage[i].Dirty = 0;
-    	dataPage[i].Requested = 0;
+    //----Handler for page fault
+    if (signal(SIGCONT,ContinueHandler) == SIG_ERR) {
+        printf("ERROR: Could not initialize continue handler\n");
+        exit(EXIT_FAILURE);
     }
 
-    return shmid;
-}
+    printf("Initialized page table:\n");
+    PrintPageTable(PageTable,NumberOfPages);
+    printf("\n");
+    //----Deal with the page requests
+    for (RSIndex = 2;RSIndex < argc-1;RSIndex++) {
+        Mode = argv[RSIndex][0];
+        Page = atoi(&argv[RSIndex][1]);
+        //----Check that it's within the process
+        if (Page >= NumberOfPages) {
+            printf("ERROR: That page number in %c%d is outside the process\n", Mode,Page);
+        } else {
+            printf("Request for page %d in %c mode\n",Page,Mode);
+            //----Check if in memory
 
+            //# 1. Mengecek apakah page ada dalam memori fisik
+            if (!PageTable[Page].Valid) {
 
-/*
-	Sinopsis
-		int dealokasiSharedMemory(key_t kunci, int ukuran);
+                //# 2. Jika tidak, MMU akan menuliskan PID ke field ​Requested untuk page tersebut. 
+                printf("It's not in RAM - page fault\n");
 
-	Nilai Kembali
-		Jika alokasi berhasil, dikembalikan 0, jika gagal -1.
-*/
-int dealokasiSharedMemory(int kunci){
+                //# Page
+                PageTable[Page].Requested = getpid();
+                //----Sleep a bit to allow OS to get ready for another signal
+                sleep(1);
 
-    // Melakukan detaching (bahasa indonesianya : pelepasan?) Shared Memori 
-    // dari memori (RAM).
-    // Setelah dilepas, Shared Memori masih bisa di tempatkan (attach) kembali
-    if (shmdt(dataPage) == -1){
-        perror("shmdt");
-        return -1;
-    }
+                //# 3. Mengirimkan sinyal ​SIGUSR1 ke proses OS.
+                //# mengirim sinyal SIGUSR1 ke program OS dgn PID = OSPID
+                if (kill(OSPID,SIGUSR1) == -1) {
+                    perror("Kill to OS");
+                    exit(EXIT_FAILURE);
+                }
 
-    // Menghapus/dealokasi (deallocate/remove) Shared Memori yang dialokasi tadi.
-    if(shmctl(kunci, IPC_RMID, NULL) == -1){
-        perror("shmctl");
-        return -1;
-    }
+                //# 4. Blocking, sampai mendapatkan sinyal SIGCONT dari proses OS yang menyatakan bahwa page telah dimuat ke memori fisik
+                /*
+                    > Deskripsi pause()
+                    > pause() causes the calling process (or thread) to sleep until a signal is
+                      delivered that either terminates the process or causes the invocation of
+                      a signal-catching function.
+                    > Sumber: man pause
+                */
+                pause();
 
-    return 0;
-}
+                if (!PageTable[Page].Valid) {
+                    printf("Bugger, something wrong\n");
+                }
+            } else {
+                printf("It's in RAM\n");
+            }
 
-/*
-	Sinopsis
-		int cariRequest();
-
-	Nilai Kembali
-		Jika terdapat request page dari MMU, maka dikembalikan nomor request,
-		-1 jika tidak ada.
-		Nilai kembali -1, artinya OS selesai bekerja
-*/
-int cariRequest(){
-	int i;
-	for(i = 0; i < banyakPage; i++)
-		//printf("dataPage[%d] = %d\n", i, dataPage[i].Requested);
-		if(dataPage[i].Requested != 0)
-			return i;
-
-	return -1;
-}
-
-/*
-	**PENTING**
-
-	FUNGSI UTAMA
-	Penanganan Memori dilakukan disini...
-*/
-void tanganiData(int nomor_request){
-
-	// Contoh...
-	printf("Process %d has requested page %d\n",dataPage[nomor_request].Requested, nomor_request);
-	printf("... lakukan sesuatu ...\n");
-	//# 3. Jika terdapat frame yang tidak ditempati, alokasikan.
-	// .. code ..
-
-	//# 4. Jika tidak ada seluruh frame ditempati, pilih page ‘victim’ yang akan di swap.
-	// .. code ..
-
-	//	   	+ Jika page ‘victim’ tersebut memiliki dirty bernilai true simulasikan penulisan pada disk, lakukan 
-	//		  sleep(1) dan tambahkan nilai pengaksesan pada disk.
-	//        .. code ..
-
-	//		+ Update page table untuk menyatakan page tersebut sudah tidak berada pada memori fisik.
-	//        .. code ..
-
-	//# 5. Simulasikan pemuatan page dengan sleep(1) dan tambahkan nilai pengaksesan pada disk.
-	// .. code ..
-
-	//# 6. Update page table untuk menyatakan page tersebut telah di load ke memori fisik dalam frame tersebut,
-	//     tentu dengan dirty bernilai false, dan kembalikan nilai Requested ke 0.
-	dataPage[nomor_request].Requested = 0;
-
-	//# 7. Cetak page table setelah diupdate.
-	// .. code ..
-}
-
-/*
-	Menangani sinyal SIGUSR1 yang dikirim oleh MMU
-*/
-void penangananSIGUSR1(int sig){
-
-	// tangani sinyal disini...
-	int no_request;
-
-	//# 1. Scan pada page table untuk menemukan Requested field yang diisi oleh MMU. 
-	no_request = cariRequest();
-	statusOS = no_request;
-
-	//# 2. Jika ditemukan, artinya page tersebut dibutuhkan oleh MMU. 
-	if(no_request != -1){
-		int PIDMMU = dataPage[no_request].Requested;
-
-		//# 3, 4, 5, 6, 7
-		tanganiData(no_request);
-
-		//# 8. Mengirimkan sinyal SIGCONT ke MMU untuk menyatakan page telah dimuat.
-		// kirim sinyal SIGCONT ke MMU
-		printf("Unblock MMU\n\n");
-		if (kill(PIDMMU, SIGCONT) == -1){
-            perror("Gagal mengirim sinyal SIGCONT ke MMU");
-            statusOS = -1;
+            //# 5. Jika proses ini merupakan proses penulisan, melakukan update pada ​Dirty ​menjadi true
+            //----If write mode, set the dirty bit
+            if (Mode == 'W') {
+                printf("Set the dirty bit for page %d\n",Page);
+                PageTable[Page].Dirty = 1;
+            }
+            PrintPageTable(PageTable,NumberOfPages);
+            printf("\n");
         }
-     	
-		// Menerima signal realtime selama simulator OS masih berjalan (online)
-		signal(SIGUSR1, penangananSIGUSR1);   
-	}
+    }
 
-	//printf("> Status OS : %s\n\n", (statusOS != -1 ? "Online" : "Offline"));
+    //----Free the shared memory
+    if (shmdt(PageTable) == -1) {
+        perror("ERROR: Error detaching segment");
+        exit(EXIT_FAILURE);
+    }
+
+    //----Alert OS
+    printf("Tell OS that I'm finished\n");
+    //----Sleep a bit to allow OS to get ready for another signal
+    sleep(1);
+
+    if (kill(OSPID,SIGUSR1) == -1) {
+        perror("Kill to OS");
+        exit(EXIT_FAILURE);
+    }
+
+    return(EXIT_SUCCESS);
 }
-
-/*
-	Menangani sinyal interrup Ctrl-C yang dilakukan user pada simulator OS
-*/
-void penangananCtrlC(int sig){
-	char  c;
-
-	signal(sig, SIG_IGN);
-	printf("\nAnda menekan Ctrl-C? Ingin Berhenti? [y/t] : ");
-	c = getchar();
-	if (c == 'y' || c == 'Y')
-		statusOS = -1;
-	else
-		signal(SIGINT, penangananCtrlC);
-}
-
-int main(int argc, char *argv[]){
-
-	if(argc < 3){
-		printf("> Kesalahan: argumen Page(arg1) dan Frame(arg2) tidak boleh kosong\n");
-		printf("> Gunakan perintah:\n\n");
-		printf("    %s <banyak page> <banyak frame>\n\n", argv[0]);
-		printf("    contoh: ");
-		printf("%s 5 2\n\n", argv[0]);
-		return 0;
-	}
-
-	banyakPage = atoi(argv[1]);
-	banyakFrame = atoi(argv[2]);
-
-	/*
-	printf("> Alokasi Shared Memory :\n");
-	printf("  Page  : %d\n", banyakPage);
-	printf("  Frame : %d\n", banyakFrame);
-	printf("\n");
-	printf("> Status :\n");
-	*/
-	int idSharedMemory = alokasiSharedMemory(getpid(), banyakPage * sizeof(page_table_entry));
-	if(idSharedMemory == -1){
-		printf("Alokasi Shared Memory Gagal\n");
-		printf("Program Berhenti.\n");
-		return 0;
-	}else{
-		/*
-		printf("  Alokasi berhasil!\n");
-		printf("+----------------------+---------------+\n");
-		printf("| Shared Memory Key    | %13d |\n", getpid());
-		printf("+----------------------+---------------+\n");
-		printf("| Shared Memory ID     | %13d |\n", idSharedMemory);
-		printf("+----------------------+---------------+\n");
-		printf("| Process ID (PID)     | %13d |\n", getpid());
-		printf("+----------------------+---------------+\n");
-		*/
-	}
-
-	/*
-	printf("\n");
-	printf("+->->->->->->->->->->-+\n");
-	printf("$ PROSES BERLANGSUNG! $\n");
-	printf("+-<-<-<-<-<-<-<-<-<-<-+\n");
-	printf("\n");
-	*/
-	/*
-		Pada bagian ini, Simulator OS (OS.c) bekerja dengan menunggu sinyal SIGUSR1 dari program MMU (MMU.c)
-	*/
-
-	// menangani interup ctrl-c dari keyboard
-	signal(SIGINT, penangananCtrlC);
-
-	//# 1, 2, 3, 4, 5, 6, 7, 8
-	signal(SIGUSR1, penangananSIGUSR1);
-
-	//# 9. Jika tidak ditemukan field Requested dengan nilai bukan nol, berhenti.
-	while(statusOS != -1)
-		pause();
-
-	// OS Selesai
-	printf("The MMU has finished\n");
-	PrintPageTable(dataPage, banyakPage);
-	printf("%d disk accesses required\n\n", aksesDisk);
-
-
-	if(dealokasiSharedMemory(idSharedMemory) == -1){
-		//printf("Dealokasi Shared Memory Gagal\n");
-	}else{
-		//printf("Dealokasi Shared Memory Berhasil\n");
-	}
-
-	//printf("OS Selesai\n");
-
-	return 0;
-}
+//-----------------------------------------------------------------------------

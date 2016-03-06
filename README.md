@@ -1,7 +1,7 @@
 # Memory-Management-Unit-Simulator
 Tugas Besar OS
 
-#Tipe data yang di share pada Virtual Memori
+#Tipe Data Share
 <p>
   Pada berkas "PageTable.h", tipe data sebagai berikut:
   <pre>

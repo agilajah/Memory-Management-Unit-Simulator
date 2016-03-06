@@ -1,6 +1,15 @@
 # Memory-Management-Unit-Simulator
 Tugas Besar OS
 
+# Bagian Yang Belum Selesai
+<ul>
+  <li>Fungsi yang menangani request dari MMU (Bagian terpenting)</li>
+  <li>Dokumentasi PageTable.h, MMU.c, dan satu bagian lagi di OS.c</li>
+  <li>Header MMU.c dan OS.c</li>
+  <li>Optimasi</li>
+  <li>Testing</li>
+</ul>
+
 #Tipe Data Share
 <p>
   Pada berkas "PageTable.h", tipe data sebagai berikut:

@@ -2,15 +2,16 @@
 Tugas Besar OS
 
 #Penjelasan Berkas
-<p>
-  <b>Tipe data yang di share pada Virtual Memori</b>
+<p style="padding: 5px;">
+  <b>Tipe data yang di share pada Virtual Memori</b><br>
   Penjelasan
 </p>
 <br>
-<p>
-  <b>Simulator Unit Manajemen Memori (MMU)</b>
+<p style="padding: 5px;">
+  <b>Simulator Unit Manajemen Memori (MMU)</b><br>
 </p>
 <br>
-<p>
-  <b>Simulator Sistem Operasi</b>
+<p style="padding: 5px;">
+  <b>Simulator Sistem Operasi</b><br>
 </p>
+<br>

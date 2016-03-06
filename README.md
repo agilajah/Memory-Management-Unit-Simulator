@@ -4,6 +4,7 @@ Tugas Besar OS
 #Penjelasan Berkas
 <p>
   <b>Tipe data yang di share pada Virtual Memori</b><br>
+  Pada berkas <pre>PageTable.h</pre>
 </p>
 <br>
 <p>

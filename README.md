@@ -4,7 +4,17 @@ Tugas Besar OS
 #Penjelasan Berkas
 <p>
   <b>Tipe data yang di share pada Virtual Memori</b><br>
-  Pada berkas <pre>PageTable.h</pre>
+  Pada berkas "PageTable.h", tipe data sebagai berikut:
+  <pre>
+  typedef struct {
+    int Valid;
+    int Frame;
+    int Dirty;
+    int Requested;
+    } page_table_entry;
+
+  typedef page_table_entry* page_table_pointer;
+  </pre>
 </p>
 <br>
 <p>

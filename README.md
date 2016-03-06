@@ -3,7 +3,7 @@ Tugas Besar OS
 
 # Bagian Yang Belum Selesai
 <ul>
-  <li>Fungsi yang menangani request dari MMU (Bagian terpenting)</li>
+  <li>Fungsi yang menangani request dari MMU (Bagian terpenting) di berkas OS.c</li>
   <li>Dokumentasi PageTable.h, MMU.c, dan satu bagian lagi di OS.c</li>
   <li>Header MMU.c dan OS.c</li>
   <li>Optimasi</li>

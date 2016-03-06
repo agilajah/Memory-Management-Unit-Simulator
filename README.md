@@ -18,7 +18,7 @@ Tugas Besar OS
   <i>Valid</i> : menyatakan apakah page tersebut ada di memori fisik. <br>
   <i>Frame</i> : menyatakan indeks frame page tersebut di memori fisik.<br>
   <i>Dirty</i> : menyatakan apakah page tersebut telah ditulis. <br>
-  <ited</i> : bernilai bukan‐nol hanya jika page tersebut tidak pada memori fisik dan dipesan oleh MMU. Pada kasus tersebut, nilai ini diisi dengan ID proses (PID) dari MMU.<br>
+  <i>Requested</i> : bernilai bukan‐nol hanya jika page tersebut tidak pada memori fisik dan dipesan oleh MMU. Pada kasus tersebut, nilai ini diisi dengan ID proses (PID) dari MMU.<br>
 </p>
 <br>
 <p>

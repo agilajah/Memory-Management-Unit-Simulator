@@ -54,7 +54,7 @@ Tugas Besar OS
   1. Sistem operasi menerima sinyal SIGUSR1 dari MMU.<br>
   2. Sistem Operasi mengecek apakah MMU meminta untuk meload sebuah page ke memori.<br>
   3. Jika MMU meminta request page, Sistem Operasi akan memuat page tersebut ke dalam memori virtual, lalu mengirim sinyal kembali ke MMU menandakan page telah selesai dimuat.<br>
-  4. Jika MMU tidak meminta request page, maka Sistem Operasi berhenti (Selesai).<br>
+  4. Jika MMU tidak meminta request page, maka Sistem Operasi berhenti (Selesai).<br><br>
   <b>> Post</b><br>
   Sebelum Sistem Operasi berhenti, memori virtual yang dialokasikan pada disk harus didealokasi oleh Sistem Operasi.<br>
   

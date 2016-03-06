@@ -1,9 +1,8 @@
 # Memory-Management-Unit-Simulator
 Tugas Besar OS
 
-#Penjelasan Berkas
+#Tipe data yang di share pada Virtual Memori
 <p>
-  <b>1. Tipe data yang di share pada Virtual Memori</b><br>
   Pada berkas "PageTable.h", tipe data sebagai berikut:
   <pre>
   typedef struct {
@@ -21,8 +20,8 @@ Tugas Besar OS
   <i>Requested</i> : bernilai bukan‐nol hanya jika page tersebut tidak pada memori fisik dan dipesan oleh MMU. Pada kasus tersebut, nilai ini diisi dengan ID proses (PID) dari MMU.<br>
 </p>
 <br>
+#Simulator Unit Manajemen Memori (MMU)
 <p>
-  <b>2. Simulator Unit Manajemen Memori (MMU)</b><br>
   Proses yang terdiri dari Page disimulasikan oleh MMU. Masukan proses diberikan dalam bentuk
   <pre>
     [mode][page]
@@ -44,8 +43,8 @@ Tugas Besar OS
   Setelah pekerjaan MMU selesai, MMU harus melepas segmen yang diciptakan pada RAM (free shared memory).<br>
 </p>
 <br>
+#Simulator Sistem Operasi
 <p>
-  <b>3. Simulator Sistem Operasi</b><br>
   <b>> Pre</b><br>
   Sistem Operasi dimulai dengan dua argumen awal, yaitu banyak Page dan banyak Frame. Sistem operasi akan melakukan alokasi memori virtual pada disk sebesar banyak Page (arg) dengan jenis data page_table_entry. Sistem Operasi akan mencetak Shared Memory Key ke layar ketika berhasil melakukan alokasi. Kunci ini akan digunakan oleh MMU untuk mengakses memori virtual yang telah dialokasi.
   Setelah proses alokasi dan mencetak kunci selesai, Sistem Operasi menunggu sinyal dari MMU untuk mengerjakan tugas yang dibutuhkan oleh MMU.<br><br>

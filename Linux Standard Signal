@@ -1,6 +1,6 @@
 
 
-/** LINUX Standard signals
+/** LINUX Standard signals 
 
 	Linux supports the standard signals listed below.  Several signal
 	numbers are architecture-dependent, as indicated in the "Value"

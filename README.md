@@ -29,7 +29,12 @@ Tugas Besar OS
   </pre>
   [mode] : jenis aksi dari proses yang akan diproses, baca(R) atau tulis(R) <br>
   [page] : nomor page yang akan diakses<br>
-  > Alur Manajemen Memori
+  <b> Alur Manajemen Memori </b><br>
+  Pre:<br>
+  Pertama kali dijalankan, MMU menerima masukan berupa alamat Shared Memory (terdapat pada argumen terakhir MMU.c) yang digunakan oleh MMU untuk menciptakan sebuah pointer ke memori virtual yang telah dialokasikan oleh Simulator Sistem Operasi.<br>
+  Setelah proses tersebut selesai, MMU siap menerima pekerjaan.<br>
+  1. Masukan sebuah proses dengan format seperti diatas.
+  2. MMU mengecek page yang diminta ada pada memori
 </p>
 <br>
 <p>

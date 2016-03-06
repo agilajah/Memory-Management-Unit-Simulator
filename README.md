@@ -25,7 +25,7 @@ Tugas Besar OS
   <b>Simulator Unit Manajemen Memori (MMU)</b><br>
   Proses yang terdiri dari Page disimulasikan oleh MMU. Masukan proses diberikan dalam bentuk
   <pre>
-    \<mode\>\<page\>
+    <mode><page>
   </pre>
   <i>\<mode\></i> : jenis aksi dari proses yang akan diproses, baca(R) atau tulis(R)
   <i>\<page\></i> : nomor page yang akan diakses

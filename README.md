@@ -37,7 +37,7 @@ Tugas Besar OS
   1. Masukan sebuah proses dengan format seperti diatas.<br>
   2. MMU mengecek page yang diminta apakah ada pada segmen memori virtual diatas.<br>
   3. Jika page yang diminta ada, maka selesai, lanjut mengolah proses berikutnya.<br>
-  4. Jika page yang diminta tidak ada, maka MMU melakukan request ke OS Simulator, agar OS Simulator memuat/memasukkan page tersebut ke memori virtual. (Rincian proses pemuatan page, baca : spek tubes)<br>
+  4. Jika page yang diminta tidak ada, maka MMU melakukan request ke OS Simulator, agar OS Simulator memuat/memasukkan page tersebut ke memori virtual. (Rincian proses request page, baca : spek tubes)<br>
   5. Setelah diload, maka selesai, lanjut mengolah proses berikutnya.<br><br>
   <b>> Post</b><br>
   Setelah pekerjaan MMU selesai, MMU harus melepas segmen yang diciptakan pada RAM (free shared memory).<br>
@@ -52,7 +52,7 @@ Tugas Besar OS
   Step Sistem Operasi mengolah pekerjaan adalah sbb:<br>
   1. Sistem operasi menerima sinyal SIGUSR1 dari MMU.<br>
   2. Sistem Operasi mengecek apakah MMU meminta untuk meload sebuah page ke memori.<br>
-  3. Jika MMU meminta request page, Sistem Operasi akan memuat page tersebut ke dalam memori virtual, lalu mengirim sinyal kembali ke MMU menandakan page telah selesai dimuat.<br>
+  3. Jika MMU meminta request page, Sistem Operasi akan memuat page tersebut ke dalam memori virtual, lalu mengirim sinyal kembali ke MMU menandakan page telah selesai dimuat. (Rincian proses pemuatan page, baca : spek tubes)<br>
   4. Jika MMU tidak meminta request page, maka Sistem Operasi berhenti (Selesai).<br><br>
   <b>> Post</b><br>
   Sebelum Sistem Operasi berhenti, memori virtual yang dialokasikan pada disk harus didealokasi oleh Sistem Operasi.<br>

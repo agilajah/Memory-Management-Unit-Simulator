@@ -1,3 +1,33 @@
+/* Tugas Besar OS 1
+   Author : Febi Agil Ifdillah
+   			Harry Octavianus Purba
+   			Rio Chandra Rajaguguk
+   			
+
+   Compile :
+   			$ gcc -o OS OS.c Vector.c
+
+   Run (example):
+   			$ OS  5 3
+   				The shared memory key (PID) is 16231
+				Initialized page table
+
+   			$ MMU 5  W2 R3 W3 R4 16231
+
+   					.....
+
+   Result : 
+
+  			The MMU has finished
+ 			0: Valid=0 Frame=-1 Dirty=0 Requested=0
+ 			1: Valid=0 Frame=-1 Dirty=0 Requested=0
+ 			2: Valid=1 Frame= 0 Dirty=1 Requested=0
+ 			3: Valid=1 Frame= 1 Dirty=1 Requested=0
+ 			4: Valid=1 Frame= 2 Dirty=0 Requested=0
+			3 disk accesses required
+			
+*/
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -14,9 +44,6 @@
 #include "Vector.h" //menggunakan dynamic array dengan nama vector
 #include "Boolean.h"
 
-/*
-	R0 R2 R1 W3 R0 R2 R1 W4 R0 R2 R1 W3 R0 R2 R1 W4 R0 R2 R1 W3 R0 R2 R1 W4 
-*/
 
 
 //Variable Global
@@ -166,11 +193,17 @@ boolean isFrameEmpty() {
 		return false;
 }
 
-//prosedur yang akan mengembalikan indeks page yang dihapus(victim), dan menambahkannya ke dalam page
 void delFromFrame() {
+		/*   Prosedur ini dipanggil karena frame penuh. Maka, akan dicari victim yang akan diswap dengan page yang baru.
+
+		   	+ Jika page ‘victim’ tersebut memiliki dirty bernilai true simulasikan penulisan pada disk, lakukan 
+			  sleep(1) dan tambahkan nilai pengaksesan pada disk.
+
+			+ Update page table untuk menyatakan page tersebut sudah tidak berada pada memori fisik. 
+		*/
 
 		if (isFrameEmpty()) {
-			return;
+			return; 
 		}
 
 		int i, simpan, max;
@@ -186,16 +219,14 @@ void delFromFrame() {
 		printf("Choose a victim page %d\n", simpan);
 		printf("Victim is dirty, write out\n");
 		
-		printf("Put in victim's frame %d\n", dataPage[simpan].Frame);	//selalu dipilih frame 0, karena queue
+		printf("Put in victim's frame %d\n", dataPage[simpan].Frame);
 		frameVictim = dataPage[simpan].Frame;
 		vector_set(&vectorFrame, frameVictim, 0);
 		dataPage[simpan].Valid = 0; //victim di invalid, menyatakan bahwa sudah tidak ada di memory fisik
-		dataPage[simpan].Frame = -1; //tidak ada diframe manapun
+		dataPage[simpan].Frame = -1; 
 		dataPage[simpan].Counter = 0;
 
-		//	   	+ Jika page ‘victim’ tersebut memiliki dirty bernilai true simulasikan penulisan pada disk, lakukan 
-		//		  sleep(1) dan tambahkan nilai pengaksesan pada disk.
-		//        .. code ..
+
 		if (dataPage[simpan].Dirty == true) {
 			dataPage[simpan].Dirty = 0; 
 			aksesDisk++;
@@ -205,12 +236,14 @@ void delFromFrame() {
 }
 
 void addToFrame (int no_page) {
-	//kalau penuh, hapus yang paling lama berada di frame
-	//# 3. Jika terdapat frame yang tidak ditempati, alokasikan.	
-	//# 4. Jika tidak ada seluruh frame ditempati, pilih page ‘victim’ yang akan di swap.
+	/* 	Page yang akan diproses hanya page yang tidak valid
+		Kalau frame penuh, hapus yang paling lama di frame atau jarang dipakai  (Least Recently Used)
+		Jika terdapat frame yang tidak ditempati, alokasikan.	
+		Jika frame penuh, maka akan dipilih victim untuk diswap dengan page yang baru 
+	*/
 	
 
-	if (!dataPage[no_page].Valid) { //page tidak ada di frame, maka hapus victim 
+	if (!dataPage[no_page].Valid) { //page tidak ada di frame,  maka pilih dan hapus victim 
 		boolean penuh=false;
 		if (isFrameFull()) {
 			delFromFrame();
@@ -223,7 +256,8 @@ void addToFrame (int no_page) {
 			dataPage[no_page].Frame = frameVictim;
 			vector_set(&vectorFrame, frameVictim, no_page);
 		} else {
-			//kalau belum ada di frame, cari frame kosong
+			//Jika belum ada di frame, cari frame yang belum ditempati
+			//Jika terdapat frame yang tidak ditempati, alokasikan.
 			int i;
 			for (i=0; i<banyakFrame; i++) {
 				int temp;
@@ -243,6 +277,13 @@ void addToFrame (int no_page) {
 } 
 
 void tanganiData(int nomor_request){
+	/* Prosedur akan melakukan penambahan waktu tinggal di frame, untuk setiap page yang berada di frame
+	   setelah melakukan pengecekan dan diproses(ditambahkan atau tidak ke frame), maka request diset ke 0.
+
+   	   Update page table untuk menyatakan page tersebut telah di load ke memori fisik dalam frame tersebut,
+	   tentu dengan dirty bernilai false, dan kembalikan nilai Requested ke 0.
+	*/
+
 	int i;
 	printf("Process %d has requested page %d\n",dataPage[nomor_request].Requested, nomor_request);
 	//melakukan penambahan waktu bagi variable counter untuk masing-masing table
@@ -252,29 +293,8 @@ void tanganiData(int nomor_request){
 	}
 	addToFrame(nomor_request); 
 
-	//# 3. Jika terdapat frame yang tidak ditempati, alokasikan.
-	// Mencari ruang kosong
-	
-
-	//# 4. Jika tidak ada seluruh frame ditempati, pilih page ‘victim’ yang akan di swap.
-	// .. code ..
-
-	//	   	+ Jika page ‘victim’ tersebut memiliki dirty bernilai true simulasikan penulisan pada disk, lakukan 
-	//		  sleep(1) dan tambahkan nilai pengaksesan pada disk.
-	//        .. code ..
-
-	//		+ Update page table untuk menyatakan page tersebut sudah tidak berada pada memori fisik.
-	//        .. code ..
-
-	//# 5. Simulasikan pemuatan page dengan sleep(1) dan tambahkan nilai pengaksesan pada disk.
-	
-
-	//# 6. Update page table untuk menyatakan page tersebut telah di load ke memori fisik dalam frame tersebut,
-	//     tentu dengan dirty bernilai false, dan kembalikan nilai Requested ke 0.
 	dataPage[nomor_request].Requested = 0;
 
-	//# 7. Cetak page table setelah diupdate.
-	// .. code ..
 }
 
 /*
@@ -293,7 +313,7 @@ void penangananSIGUSR1(int sig){
 	if(no_request != -1){
 		int PIDMMU = dataPage[no_request].Requested;
 
-		//# 3, 4, 5, 6, 7
+		// untuk point # 3, 4, 5, 6, 7
 		tanganiData(no_request);
 
 		//# 8. Mengirimkan sinyal SIGCONT ke MMU untuk menyatakan page telah dimuat.
@@ -308,7 +328,6 @@ void penangananSIGUSR1(int sig){
 		signal(SIGUSR1, penangananSIGUSR1);   
 	}
 
-	//printf("> Status OS : %s\n\n", (statusOS != -1 ? "Online" : "Offline"));
 }
 
 /*
@@ -342,15 +361,6 @@ int main(int argc, char *argv[]){
 	banyakPage = atoi(argv[1]);
 	banyakFrame = atoi(argv[2]);
 	
-
-	/*
-	printf("> Alokasi Shared Memory :\n");
-	printf("  Page  : %d\n", banyakPage);
-	printf("  Frame : %d\n", banyakFrame);
-	printf("\n");
-	printf("> Status :\n");
-	*/
-	 //melakukan inisialisasi frame
 	
 	vector_init(&vectorFrame);
 	int i;
@@ -363,27 +373,8 @@ int main(int argc, char *argv[]){
 		printf("Alokasi Shared Memory Gagal\n");
 		printf("Program Berhenti.\n");
 		return 0;
-	}else{
-		
-		/*
-		printf("  Alokasi berhasil!\n");
-		printf("+----------------------+---------------+\n");
-		printf("| Shared Memory Key    | %13d |\n", getpid());
-		printf("+----------------------+---------------+\n");
-		printf("| Shared Memory ID     | %13d |\n", idSharedMemory);
-		printf("+----------------------+---------------+\n");
-		printf("| Process ID (PID)     | %13d |\n", getpid());
-		printf("+----------------------+---------------+\n");
-		*/
 	}
 
-	/*
-	printf("\n");
-	printf("+->->->->->->->->->->-+\n");
-	printf("$ PROSES BERLANGSUNG! $\n");
-	printf("+-<-<-<-<-<-<-<-<-<-<-+\n");
-	printf("\n");
-	*/
 	/*
 		Pada bagian ini, Simulator OS (OS.c) bekerja dengan menunggu sinyal SIGUSR1 dari program MMU (MMU.c)
 	*/
@@ -403,15 +394,6 @@ int main(int argc, char *argv[]){
 	printf("The MMU has finished\n");
 	PrintPageTable(dataPage, banyakPage);
 	printf("%d disk accesses required\n\n", aksesDisk);
-
-
-	if(dealokasiSharedMemory(idSharedMemory) == -1){
-		//printf("Dealokasi Shared Memory Gagal\n");
-	}else{
-		//printf("Dealokasi Shared Memory Berhasil\n");
-	}
-
-	//printf("OS Selesai\n");
 
 	return 0;
 }

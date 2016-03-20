@@ -1,5 +1,5 @@
 /* Tugas Besar OS 1
-   Author : Febi Agil Ifdillah
+   Author : Febi Agil Ifdillah (13514010)
    			Harry Octavianus Purba
    			Rio Chandra Rajaguguk
    			
